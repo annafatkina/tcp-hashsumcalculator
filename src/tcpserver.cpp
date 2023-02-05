@@ -6,37 +6,44 @@
 
 void
 TcpServer::do_accept() {
-    acceptor_.async_accept(
-        [this](boost::system::error_code ec, Tcp::socket socket) {
-            if (!ec) {
+    acceptor_.async_accept([this](boost::system::error_code ec,
+                                  Tcp::socket               socket) {
+        if (!ec) {
+            try {
+
                 sessionFactory_(context_, std::move(socket), sessionCounter_)
                     ->start();
                 sessionCounter_++;
-            } else {
-                std::cerr << "Failed to accept connection, error: " << ec
-                          << std::endl
-                          << std::fflush;
+            } catch (const std::exception &e) {
+                std::cerr << "Failed to create session with a given session "
+                             "factory method, error: "
+                          << e.what();
             }
+        } else {
+            std::cerr << "Failed to accept connection, error: " << ec
+                      << std::endl;
+        }
 
-            do_accept();
-        });
+        do_accept();
+    });
 }
 
 void
 TcpServer::run() {
     // Create a pool of threads to run all of the io_contexts.
-    threads.reserve(num_threads_);
+    threads_.reserve(num_threads_);
     std::cout << "Starting " << num_threads_ << " threads..." << std::endl;
 
     for (std::size_t i = 0; i < num_threads_; ++i) {
         auto t = std::make_shared<std::thread>(
             boost::bind(&boost::asio::io_context::run, &context_));
-        threads.emplace_back(std::move(t));
+        threads_.emplace_back(std::move(t));
     }
 }
 
 TcpServer::TcpServer(short port, SessionFactoryFunc sessionFactoryFunc)
-    : num_threads_(std::thread::hardware_concurrency() - 1)
+    : threads_()
+    , num_threads_(std::thread::hardware_concurrency() - 1)
     , context_()
     , signals_(context_)
     , acceptor_(context_, Tcp::endpoint(Tcp::v4(), port))
@@ -69,7 +76,7 @@ TcpServer::stop() {
 
 void
 TcpServer::waitForStop() {
-    for (std::size_t i = 0; i < threads.size(); ++i)
-        threads[i]->join();
-    threads.clear();
+    for (std::size_t i = 0; i < threads_.size(); ++i)
+        threads_[i]->join();
+    threads_.clear();
 }

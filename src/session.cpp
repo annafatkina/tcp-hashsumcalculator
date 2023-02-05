@@ -28,7 +28,6 @@ Session::do_read() {
             std::cerr << "Error while reading data from client:\n\t"
                       << ec.message() << "\nfor session with session id "
                       << sessionId_ << ". Closing this session." << std::endl;
-            return;
         }
     };
 
@@ -43,6 +42,10 @@ Session::do_write() {
     auto callback = [this, self](boost::system::error_code ec, int size) {
         if (!ec) {
             do_read();
+        } else {
+            std::cerr << "Error while writing data from client:\n\t"
+                      << ec.message() << "\nfor session with session id "
+                      << sessionId_ << ". Closing this session." << std::endl;
         }
     };
 

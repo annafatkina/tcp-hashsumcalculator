@@ -7,6 +7,8 @@
 #include <memory>
 
 class Session : public ISession {
+    // This class represents a single client session.
+
     // TYPES
     using Tcp     = boost::asio::ip::tcp;
     using Context = boost::asio::io_context;
