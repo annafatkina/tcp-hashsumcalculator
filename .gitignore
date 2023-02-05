@@ -34,4 +34,5 @@
 *.key
 *.vscode
 *.clang-formats
+*.tmp
 build
