@@ -82,6 +82,6 @@ OR simply run
 . run.sh <n>
 ```
 from the repo directory. This will run the tcp server and `<n>` netcat
-clients. Each client sends strings from `teststrings.txt` to server
-and writes output to `out<k>.tmp` files, where `k=1..n`.
+clients. Each client sends strings from `teststrings.txt` to server. Note that 
+this scripts kills `nc` and `tcp_server` processes in the end.
 
