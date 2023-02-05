@@ -13,4 +13,4 @@ RUN cd tcp-hashsumcalculator && git checkout dev && mkdir build && \
     cd build && cmake ../ && make -j
 
 # run tests
-CMD ./~/tcp-hashsumcalculator/build/tests/tests
+CMD cd tcp-hashsumcalculator/build/tests/ && ./tests
