@@ -3,7 +3,7 @@ FROM ubuntu:20.04
 ENV DEBIAN_FRONTEND noninteractive
 
 # install dependencies
-RUN apt-get update && apt-get install -y git gcc g++ libboost-all-dev libgtest-dev cmake make 
+RUN apt-get update && apt-get install -y git gcc g++ libboost-all-dev libgtest-dev cmake make netcat
 
 # clone sources
 RUN  git clone https://github.com/annafatkina/tcp-hashsumcalculator.git
