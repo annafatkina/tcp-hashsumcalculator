@@ -28,7 +28,8 @@ docker build -t tcpserver .
 docker run tcpserver
 ```
 
-This will run unit tests and print its output to command line.
+This will run unit tests and print its output to command line, and then run
+tcp server with multiple clients.
 
 ### Locally
 
@@ -50,9 +51,7 @@ directory:
 ```
 make test
 ```
-
 or
-
 
 ```
 ./tests/hasher
@@ -77,3 +76,11 @@ nc localhost <port>
 ```
 
 And write any string ends with line break there.
+
+OR simply run 
+```
+. run.sh <n>
+```
+from the repo directory. This will run the tcp server and `<n>` netcat
+clients. Each client sends strings from `teststrings.txt` to server
+and writes output to `out<k>.tmp` files, where `k=1..n`.
