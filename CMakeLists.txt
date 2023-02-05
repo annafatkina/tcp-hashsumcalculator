@@ -10,5 +10,10 @@ add_subdirectory(tests)
 
 enable_testing()
 
-add_test(NAME test COMMAND ./tests/tests)
+add_test(NAME hasher COMMAND ./tests/hasher)
+add_test(NAME session COMMAND ./tests/session)
+add_test(NAME tcpserver COMMAND ./tests/tcpserver)
 
+set_tests_properties(hasher PROPERTIES TIMEOUT 2)
+set_tests_properties(session PROPERTIES TIMEOUT 2)
+set_tests_properties(tcpserver PROPERTIES TIMEOUT 2)

@@ -22,6 +22,10 @@ set ( TESTS
       tcpserver.cc 
       )
 
-add_executable( tests ${TESTS})
+add_executable( hasher hasher.cc)
+add_executable( session session.cc)
+add_executable( tcpserver tcpserver.cc)
 
-TARGET_LINK_LIBRARIES( tests LINK_PUBLIC ${Boost_LIBRARIES} server -lpthread GTest::gtest_main gmock)
+TARGET_LINK_LIBRARIES( hasher LINK_PUBLIC ${Boost_LIBRARIES} server -lpthread GTest::gtest_main gmock)
+TARGET_LINK_LIBRARIES( session LINK_PUBLIC ${Boost_LIBRARIES} server -lpthread GTest::gtest_main gmock)
+TARGET_LINK_LIBRARIES( tcpserver LINK_PUBLIC ${Boost_LIBRARIES} server -lpthread GTest::gtest_main gmock)

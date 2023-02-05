@@ -12,13 +12,13 @@ class TcpServer {
     using SessionFactoryFunc = std::function<std::shared_ptr<ISession>(
         Context &io_context, Tcp::socket socket, int sessionId)>;
 
-    std::vector<std::shared_ptr<std::thread>> threads_;
-    unsigned int                              num_threads_;
     Context                                   context_;
     Signals                                   signals_;
     Acceptor                                  acceptor_;
-    int                                       sessionCounter_;
     SessionFactoryFunc                        sessionFactory_;
+    std::vector<std::shared_ptr<std::thread>> threads_;
+    int                                       sessionCounter_;
+    unsigned int                              num_threads_;
 
     // Accept new connection
     void do_accept();

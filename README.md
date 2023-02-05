@@ -48,7 +48,16 @@ To run tests, build the project and the run the following from the build
 directory:
 
 ```
-./tests/tests
+make test
+```
+
+or
+
+
+```
+./tests/hasher
+./tests/session
+./tests/tcpserver
 ```
 
 ### Server
