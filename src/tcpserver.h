@@ -1,8 +1,8 @@
 #ifndef TCPSERVER_H
 #define TCPSERVER_H
 
-#include <boost/asio.hpp>
 #include "isession.h"
+#include <boost/asio.hpp>
 
 class TcpServer {
     using Context            = boost::asio::io_context;
@@ -24,18 +24,22 @@ class TcpServer {
     void do_accept();
 
   public:
-    // Join all the threads ans stop this server.
-    void stop();
-
-    // Create 'TcpSerer' object with the specified 'io_context' and 'port'.
+    // Create 'TcpServer' object with the specified 'port' and
+    // 'sessionFactoryFunc'. Use 'Session' object creation function by default.
     TcpServer(short              port,
               SessionFactoryFunc sessionFactoryFunc = &createSession);
 
+    // Destroy this object.
+    ~TcpServer();
+
+    // Join all the threads ans stop this server.
+    void stop();
+
+    // Wait until server stopped.
+    void waitForStop();
+
     // Run this server.
     void run();
-    ~TcpServer() {
-      stop();
-    }
 };
 
 #endif   // TCPSERVER_H

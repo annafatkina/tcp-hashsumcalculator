@@ -1,8 +1,7 @@
 #include "session.h"
-#include "boost/bind.hpp"
+#include "hasher.h"
+#include <boost/bind.hpp>
 #include <iostream>
-
-ISession::~ISession() {}
 
 std::string
 Session::readBuffer() {
@@ -34,7 +33,8 @@ Session::do_read() {
     };
 
     boost::asio::async_read_until(
-        socket_, rBuffer_, '\n', boost::asio::bind_executor(rwStrand_, callback));
+        socket_, rBuffer_, '\n',
+        boost::asio::bind_executor(rwStrand_, callback));
 }
 
 void
@@ -65,7 +65,7 @@ Session::Session(Context &io_context, Tcp::socket socket, int sessionId)
     , socket_(std::move(socket))
     , rBuffer_()
     , wBuffer_()
-    , rwStrand_(io_context) 
+    , rwStrand_(io_context)
     , hasher_() {}
 
 Session::~Session() {
@@ -81,7 +81,7 @@ Session::start() {
 }
 
 std::shared_ptr<ISession>
-createSession(boost::asio::io_context     &io_context,
+createSession(boost::asio::io_context &    io_context,
               boost::asio::ip::tcp::socket socket, int sessionId) {
     return std::make_shared<Session>(io_context, std::move(socket), sessionId);
 }

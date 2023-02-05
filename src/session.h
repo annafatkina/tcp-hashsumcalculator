@@ -1,14 +1,14 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#include "boost/asio.hpp"
 #include "hasher.h"
-#include <memory>
 #include "isession.h"
+#include <boost/asio.hpp>
+#include <memory>
 
 class Session : public ISession {
     // TYPES
-    using Tcp = boost::asio::ip::tcp;
+    using Tcp     = boost::asio::ip::tcp;
     using Context = boost::asio::io_context;
 
     // DATA
@@ -16,7 +16,7 @@ class Session : public ISession {
     boost::asio::streambuf rBuffer_;
     boost::asio::streambuf wBuffer_;
     Context::strand        rwStrand_;
-    Hasher       hasher_;
+    Hasher                 hasher_;
 
     // PRIVATE METHODS
 
@@ -37,7 +37,8 @@ class Session : public ISession {
     void handle() override;
 
   public:
-    // Create 'Session' object with the specified 'socket' and 'sessionId'.
+    // Create 'Session' object with the specified 'io_context', 'socket' and
+    // 'sessionId'.
     Session(Context &io_context, Tcp::socket socket, int sessionId);
 
     // Destroy this object.

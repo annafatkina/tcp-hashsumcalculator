@@ -1,9 +1,5 @@
-#include <boost/asio.hpp>
-#include <iostream>
-#include <memory>
-#include <utility>
-
 #include "tcpserver.h"
+#include <iostream>
 
 int
 main(int argc, char *argv[]) {
@@ -16,6 +12,7 @@ main(int argc, char *argv[]) {
         TcpServer server(std::atoi(argv[1]));
 
         server.run();
+        server.waitForStop();
     } catch (std::exception &e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }

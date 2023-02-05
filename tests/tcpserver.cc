@@ -15,8 +15,7 @@ class TestClient {
         : port_(port)
         , io_context_()
         , sock_(io_context_)
-        , buffer_() {
-    }
+        , buffer_() {}
 
     void run() {
         try {
@@ -34,9 +33,7 @@ class TestClient {
                            boost::asio::buffer(string.c_str(), request_length));
     }
 
-    ~TestClient() {
-        io_context_.stop();
-    }
+    ~TestClient() { io_context_.stop(); }
 };
 
 class MockSession;
@@ -45,7 +42,7 @@ int                                       sessionCounter = 0;
 std::vector<std::shared_ptr<MockSession>> sessions;
 
 class MockSession : public ISession {
-    std::string                        mockString;
+    std::string mockString;
 
   public:
     MOCK_METHOD(std::string, readBuffer, (), (override));
@@ -61,15 +58,13 @@ class MockSession : public ISession {
         sessionCounter++;
     }
 
-    ~MockSession() {
-        sessionCounter--;
-    }
+    ~MockSession() { sessionCounter--; }
 
     void setMockString(const std::string &str) { mockString = str; }
 };
 
 std::shared_ptr<ISession>
-createMockSession(boost::asio::io_context     &io_context,
+createMockSession(boost::asio::io_context &    io_context,
                   boost::asio::ip::tcp::socket socket, int sessionId) {
     auto session =
         std::make_shared<MockSession>(io_context, std::move(socket), sessionId);
@@ -86,11 +81,12 @@ TEST(TcpServerTests, CreateServer) {
     TcpServer server(port, &createMockSession);
     server.run();
     server.stop();
+
     std::string threadsNum =
         std::to_string(std::thread::hardware_concurrency() - 1);
+    
     EXPECT_EQ(testing::internal::GetCapturedStdout(),
-              "Starting " + threadsNum + " threads...\nStopping " +
-                  threadsNum + " threads...\nDone.\n");
+              "Starting " + threadsNum + " threads...\nTcp Server stopped.\n");
 }
 
 // Run the server, then add a single connection. Expect the corresponding mock
@@ -124,6 +120,7 @@ TEST(TcpServerTests, RunServerSingleConnection) {
     ON_CALL(*firstSession, readBuffer())
         .WillByDefault(::testing::Return(mockString));
 
+    
     server.stop();
     sessions.clear();
 

@@ -13,7 +13,9 @@ TcpServer::do_accept() {
                     ->start();
                 sessionCounter_++;
             } else {
-                std::cerr << "Failed to accept connection, error: " << ec << std::endl << std::fflush; 
+                std::cerr << "Failed to accept connection, error: " << ec
+                          << std::endl
+                          << std::fflush;
             }
 
             do_accept();
@@ -21,32 +23,19 @@ TcpServer::do_accept() {
 }
 
 void
-TcpServer::stop() {
-    if (context_.stopped()) return;
-    std::cout << "Stopping " << num_threads_ << " threads..." << std::endl;
-    context_.stop();
-    for (std::size_t i = 0; i < threads.size(); ++i)
-        threads[i]->join();
-    threads.clear();
-    std::cout << "Done." << std::endl;
-}
-
-void
 TcpServer::run() {
     // Create a pool of threads to run all of the io_contexts.
     threads.reserve(num_threads_);
     std::cout << "Starting " << num_threads_ << " threads..." << std::endl;
-    
+
     for (std::size_t i = 0; i < num_threads_; ++i) {
         auto t = std::make_shared<std::thread>(
             boost::bind(&boost::asio::io_context::run, &context_));
         threads.emplace_back(std::move(t));
     }
-
 }
 
-TcpServer::TcpServer(short              port,
-                     SessionFactoryFunc sessionFactoryFunc)
+TcpServer::TcpServer(short port, SessionFactoryFunc sessionFactoryFunc)
     : num_threads_(std::thread::hardware_concurrency() - 1)
     , context_()
     , signals_(context_)
@@ -62,7 +51,24 @@ TcpServer::TcpServer(short              port,
 #if defined(SIGQUIT)
     signals_.add(SIGQUIT);
 #endif   // defined(SIGQUIT)
-    signals_.async_wait(boost::bind(&TcpServer::stop, this));
+    signals_.async_wait(boost::bind(&Context::stop, &context_));
 
     do_accept();
+}
+
+TcpServer::~TcpServer() { stop(); }
+
+void
+TcpServer::stop() {
+    if (!context_.stopped())
+        context_.stop();
+    std::cout << "Tcp Server stopped." << std::endl;
+    waitForStop();
+}
+
+void
+TcpServer::waitForStop() {
+    for (std::size_t i = 0; i < threads.size(); ++i)
+        threads[i]->join();
+    threads.clear();
 }

@@ -25,6 +25,3 @@ set ( TESTS
 add_executable( tests ${TESTS})
 
 TARGET_LINK_LIBRARIES( tests LINK_PUBLIC ${Boost_LIBRARIES} server -lpthread GTest::gtest_main gmock)
-
-#include(GoogleTest)
-#gtest_discover_tests(tests)
