@@ -61,8 +61,8 @@ Session::handle() {
 
 // public
 Session::Session(Context &io_context, Tcp::socket socket, int sessionId)
-    : socket_(std::move(socket))
-    , sessionId_(sessionId)
+    : ISession(sessionId)
+    , socket_(std::move(socket))
     , rBuffer_()
     , wBuffer_()
     , rwStrand_(io_context) 
@@ -78,4 +78,10 @@ Session::start() {
     std::cout << "Session with session id " << sessionId_ << " started."
               << std::endl;
     do_read();
+}
+
+std::shared_ptr<ISession>
+createSession(boost::asio::io_context     &io_context,
+              boost::asio::ip::tcp::socket socket, int sessionId) {
+    return std::make_shared<Session>(io_context, std::move(socket), sessionId);
 }
