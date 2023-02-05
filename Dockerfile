@@ -13,4 +13,4 @@ RUN cd tcp-hashsumcalculator && mkdir build && \
     cd build && cmake ../ && make -j
 
 # run tests
-CMD cd tcp-hashsumcalculator/build/ && make test
+CMD cd tcp-hashsumcalculator/build/ && make test && cd ../ && . run.sh 3 && cat out0.tmp

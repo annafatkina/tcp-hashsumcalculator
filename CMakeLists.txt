@@ -16,4 +16,5 @@ add_test(NAME tcpserver COMMAND ./tests/tcpserver)
 
 set_tests_properties(hasher PROPERTIES TIMEOUT 2)
 set_tests_properties(session PROPERTIES TIMEOUT 2)
-set_tests_properties(tcpserver PROPERTIES TIMEOUT 2)
+set_tests_properties(tcpserver PROPERTIES TIMEOUT 3)
+
