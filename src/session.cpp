@@ -23,7 +23,12 @@ Session::do_read() {
     auto self(shared_from_this());
     auto callback = [this, self](boost::system::error_code ec, int size) {
         if (!ec) {
-            handle();
+            try {
+                handle();
+            } catch (const std::exception &e) {
+                std::cerr << "Error while calling 'Session::handle()': "
+                          << e.what();
+            }
         } else {
             std::cerr << "Error while reading data from client:\n\t"
                       << ec.message() << "\nfor session with session id "
@@ -41,7 +46,12 @@ Session::do_write() {
     auto self(shared_from_this());
     auto callback = [this, self](boost::system::error_code ec, int size) {
         if (!ec) {
-            do_read();
+            try {
+                do_read();
+            } catch (const std::exception &e) {
+                std::cerr << "Error while calling 'Session::do_read()': "
+                          << e.what();
+            }
         } else {
             std::cerr << "Error while writing data from client:\n\t"
                       << ec.message() << "\nfor session with session id "
@@ -58,18 +68,17 @@ Session::handle() {
     std::string s = readBuffer();
 
     // Note: Hash computation is noexept
-    std::string hash = hasher_.compute(s);
+    std::string hash = Hasher::compute(s);
     writeToBuffer(hash);
 }
 
 // public
 Session::Session(Context &io_context, Tcp::socket socket, int sessionId)
     : ISession(sessionId)
+    , rwStrand_(io_context)
     , socket_(std::move(socket))
     , rBuffer_()
-    , wBuffer_()
-    , rwStrand_(io_context)
-    , hasher_() {}
+    , wBuffer_() {}
 
 Session::~Session() {
     std::cout << "Session with session id " << sessionId_ << " closed."

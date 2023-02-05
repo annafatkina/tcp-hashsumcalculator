@@ -14,11 +14,10 @@ class Session : public ISession {
     using Context = boost::asio::io_context;
 
     // DATA
+    Context::strand        rwStrand_;
     Tcp::socket            socket_;
     boost::asio::streambuf rBuffer_;
     boost::asio::streambuf wBuffer_;
-    Context::strand        rwStrand_;
-    Hasher                 hasher_;
 
     // PRIVATE METHODS
 

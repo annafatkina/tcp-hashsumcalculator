@@ -44,8 +44,14 @@ class TestClient {
 
 class MockSession;
 
-int                                       sessionCounter = 0;
+std::mutex sessionsMtx;
 std::vector<std::shared_ptr<MockSession>> sessions;
+
+int getSessionCounter() {
+    std::lock_guard<std::mutex> lg(sessionsMtx);
+    return sessions.size();
+}
+
 
 class MockSession : public ISession {
     // This is a mock session class for 'TcpServer' testing.
@@ -62,11 +68,9 @@ class MockSession : public ISession {
 
     MockSession(boost::asio::io_context &    io_context,
                 boost::asio::ip::tcp::socket socket, int sessionId)
-        : ISession(sessionId) {
-        sessionCounter++;
-    }
+        : ISession(sessionId) { }
 
-    ~MockSession() { sessionCounter--; }
+    ~MockSession() { }
 
     void setMockString(const std::string &str) { mockString = str; }
 };
@@ -75,6 +79,7 @@ class MockSession : public ISession {
 std::shared_ptr<ISession>
 createMockSession(boost::asio::io_context &    io_context,
                   boost::asio::ip::tcp::socket socket, int sessionId) {
+    std::lock_guard<std::mutex> lg(sessionsMtx);
     auto session =
         std::make_shared<MockSession>(io_context, std::move(socket), sessionId);
     sessions.emplace_back(session);
@@ -117,7 +122,7 @@ TEST(TcpServerTests, RunServerSingleConnection) {
     TcpServer server(port, &createMockSession);
     server.run();
     // No active session
-    EXPECT_EQ(sessionCounter, 0);
+    EXPECT_EQ(getSessionCounter(), 0);
 
     // Connect test client
     TestClient client(port);
@@ -127,7 +132,7 @@ TEST(TcpServerTests, RunServerSingleConnection) {
     sleep(1);
 
     // One active session now
-    EXPECT_EQ(sessionCounter, 1);
+    EXPECT_EQ(getSessionCounter(), 1);
 
     auto firstSession = sessions[0];
     firstSession->setMockString(mockString);
@@ -160,7 +165,7 @@ TEST(TcpServerTests, UnhappyPathCreateConnection) {
     server.run();
 
     // No active session
-    EXPECT_EQ(sessionCounter, 0);
+    EXPECT_EQ(getSessionCounter(), 0);
 
     // Connect test client
     TestClient client(port);

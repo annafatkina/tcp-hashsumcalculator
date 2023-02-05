@@ -10,7 +10,6 @@ TcpServer::do_accept() {
                                   Tcp::socket               socket) {
         if (!ec) {
             try {
-
                 sessionFactory_(context_, std::move(socket), sessionCounter_)
                     ->start();
                 sessionCounter_++;
@@ -42,13 +41,13 @@ TcpServer::run() {
 }
 
 TcpServer::TcpServer(short port, SessionFactoryFunc sessionFactoryFunc)
-    : threads_()
-    , num_threads_(std::thread::hardware_concurrency() - 1)
-    , context_()
+    : context_()
     , signals_(context_)
     , acceptor_(context_, Tcp::endpoint(Tcp::v4(), port))
+    , threads_()
     , sessionCounter_(0)
-    , sessionFactory_(sessionFactoryFunc) {
+    , sessionFactory_(sessionFactoryFunc)
+    , num_threads_(std::thread::hardware_concurrency() - 1) {
 
     // Register to handle the signals that indicate when the server should exit.
     // It is safe to register for the same signal multiple times in a program,
