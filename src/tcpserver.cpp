@@ -60,9 +60,10 @@ TcpServer::~TcpServer() { stop(); }
 
 void
 TcpServer::stop() {
-    if (!context_.stopped())
+    if (!context_.stopped()) {
         context_.stop();
-    std::cout << "Tcp Server stopped." << std::endl;
+        std::cout << "Tcp Server stopped." << std::endl;
+    }
     waitForStop();
 }
 
