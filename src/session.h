@@ -14,6 +14,7 @@ class Session : public ISession {
     using Context = boost::asio::io_context;
 
     // DATA
+    Hasher                 hasher;
     Context::strand        rwStrand_;
     Tcp::socket            socket_;
     boost::asio::streambuf rBuffer_;
@@ -35,7 +36,7 @@ class Session : public ISession {
     void do_write() override;
 
     // Process the received data.
-    void handle() override;
+    void handle(bool lastChunk) override;
 
   public:
     // Create 'Session' object with the specified 'io_context', 'socket' and

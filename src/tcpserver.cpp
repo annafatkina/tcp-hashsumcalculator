@@ -47,7 +47,7 @@ TcpServer::TcpServer(short port, SessionFactoryFunc sessionFactoryFunc)
     , threads_()
     , sessionCounter_(0)
     , sessionFactory_(sessionFactoryFunc)
-    , num_threads_(std::thread::hardware_concurrency() - 1) {
+    , num_threads_(std::thread::hardware_concurrency()) {
 
     // Register to handle the signals that indicate when the server should exit.
     // It is safe to register for the same signal multiple times in a program,

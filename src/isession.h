@@ -28,7 +28,7 @@ class ISession : public std::enable_shared_from_this<ISession> {
     virtual void do_write() = 0;
 
     // Process the received data.
-    virtual void handle() = 0;
+    virtual void handle(bool lastChunk) = 0;
 
   public:
     // Create object with the specified 'sessionId'.

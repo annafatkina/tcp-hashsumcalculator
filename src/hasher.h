@@ -5,18 +5,36 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include <openssl/sha.h>
 
-class Hasher {
-    // This class provides a mechanism to compute a hash.
-
+class IHasher {
+    // This class provides an interface for a mechanism to compute a hash.
   public:
     // Return a hash for the specified 'str'.
-    static std::string compute(const std::string &str) noexcept {
-        size_t            res = std::hash<std::string>()(str);
-        std::stringstream stream;
-        stream << "0x" << std::setfill('0') << std::setw(sizeof(size_t) * 2)
-               << std::hex << res;
-        return stream.str();
+    virtual void compute(const std::string &in, bool isLastChunk) noexcept = 0;
+
+    virtual ~IHasher() = default;
+};
+
+class Hasher : public IHasher {
+    // This class provides a mechanism to compute a hash.
+    SHA256_CTX sha256;
+    unsigned char output[SHA256_DIGEST_LENGTH];
+    unsigned char buf[8192];
+
+  public:
+    Hasher(); 
+    
+    // Return a hash for the specified 'str'.
+    void compute(const std::string &in, bool isLastChunk = true) noexcept;
+
+    std::string getResult() {
+      std::stringstream shastr;
+      shastr << std::hex << std::setfill('0');
+      for (const auto &byte : output) {
+          shastr << std::setw(2) << (int) byte;
+      }
+      return shastr.str();
     }
 };
 

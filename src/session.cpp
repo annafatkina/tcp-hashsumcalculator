@@ -2,6 +2,7 @@
 #include "hasher.h"
 #include <boost/bind.hpp>
 #include <iostream>
+#include <openssl/sha.h>
 
 std::string
 Session::readBuffer() {
@@ -23,17 +24,18 @@ Session::do_read() {
     auto self(shared_from_this());
     auto callback = [this, self](boost::system::error_code ec, int size) {
         if (!ec) {
-            try {
-                handle();
-            } catch (const std::exception &e) {
-                std::cerr << "Error while calling 'Session::handle()': "
-                          << e.what();
-            }
-        } else {
-            std::cerr << "Error while reading data from client:\n\t"
-                      << ec.message() << "\nfor session with session id "
-                      << sessionId_ << ". Closing this session." << std::endl;
+            handle(true /*is the last chunk*/);
+            return;
         }
+
+        if (ec == boost::asio::error::not_found) {
+            handle(false /*is not a last chunk */);
+            return;
+        }
+
+        std::cerr << "Error while reading data from client:\n\t" << ec.message()
+                  << "\nfor session with session id " << sessionId_
+                  << ". Closing this session." << std::endl;
     };
 
     boost::asio::async_read_until(
@@ -53,7 +55,7 @@ Session::do_write() {
                           << e.what();
             }
         } else {
-            std::cerr << "Error while writing data from client:\n\t"
+            std::cerr << "Error while writing data to client:\n\t"
                       << ec.message() << "\nfor session with session id "
                       << sessionId_ << ". Closing this session." << std::endl;
         }
@@ -64,12 +66,28 @@ Session::do_write() {
 }
 
 void
-Session::handle() {
-    std::string s = readBuffer();
+Session::handle(bool lastChunk) {
+    try {
+    } catch (const std::exception &e) {
+        std::cerr << "Error while calling handling received data: " << e.what();
+    }
 
+    std::string s = readBuffer();
+    if (s.size() == 0) {
+        throw std::runtime_error("No data received and no line break reched.");
+        // ?????
+    }
+
+    std::cout << "read: " << s << std::endl;
     // Note: Hash computation is noexept
-    std::string hash = Hasher::compute(s);
-    writeToBuffer(hash);
+
+    hasher.compute(s, lastChunk);
+    if (lastChunk) {
+        writeToBuffer(hasher.getResult());
+    } else {
+        do_read();
+    }
+
 }
 
 // public
@@ -77,7 +95,7 @@ Session::Session(Context &io_context, Tcp::socket socket, int sessionId)
     : ISession(sessionId)
     , rwStrand_(io_context)
     , socket_(std::move(socket))
-    , rBuffer_()
+    , rBuffer_(SHA256_DIGEST_LENGTH)
     , wBuffer_() {}
 
 Session::~Session() {
