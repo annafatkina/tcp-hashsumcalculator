@@ -21,6 +21,7 @@ Session::writeToBuffer(const std::string &str) {
 
 void
 Session::do_read() {
+    std::cout << "session id = " << sessionId_ << ", thread = " << std::this_thread::get_id() << std::endl;
     auto self(shared_from_this());
     auto callback = [this, self](boost::system::error_code ec, int size) {
         if (!ec) {

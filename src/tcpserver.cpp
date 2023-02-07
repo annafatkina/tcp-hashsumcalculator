@@ -6,6 +6,7 @@
 
 void
 TcpServer::do_accept() {
+    std::cout << "accept thread " << std::this_thread::get_id() << std::endl;
     acceptor_.async_accept([this](boost::system::error_code ec,
                                   Tcp::socket               socket) {
         if (!ec) {
@@ -23,7 +24,7 @@ TcpServer::do_accept() {
                       << std::endl;
         }
 
-        do_accept();
+       do_accept();
     });
 }
 
@@ -66,6 +67,10 @@ TcpServer::~TcpServer() { stop(); }
 
 void
 TcpServer::stop() {
+    if (acceptor_.is_open()) {
+        acceptor_.close();
+    }
+    
     if (!context_.stopped()) {
         context_.stop();
         std::cout << "Tcp Server stopped." << std::endl;
