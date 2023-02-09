@@ -1,3 +1,4 @@
+#include <functional>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <ihasher.h>
@@ -5,48 +6,58 @@
 #include <session.h>
 
 class MockHasher : public IHasher {
-public:
+    // This is a mock hasher class to test 'Session' class.
 
-    MockHasher() {std::cout << "Mockhasher ctor\n";}
-    MOCK_METHOD(void, compute, (const std::string &in, bool isLastChunk), (override));
-    std::string getResult() override {
-        return "string";
-    }
-    int getChunkSize() const override {return 32; }
+  public:
+    MOCK_METHOD(void, compute, (const std::string &in, bool isLastChunk),
+                (override));
+    MOCK_METHOD(std::string, getResult, (), (override));
+
+    // Return a hardcoded chunk size.
+    int getChunkSize() const override { return 32; }
 };
 
-std::shared_ptr<MockHasher> hasher;
-
-std::shared_ptr<IHasher> createMockHasher() {
-    hasher = std::make_shared<MockHasher>();
+// Return the specified mock 'hasher' as a pointer to its interface class
+// 'IHasher'.
+std::shared_ptr<IHasher>
+createMockHasher(std::shared_ptr<MockHasher> hasher) {
     return hasher;
 }
 
-class SessionWrapper : public Session{
-     public:
+class SessionWrapper : public Session {
+    // This class is a thin wrapper for 'Session' object to be tested.
 
-       SessionWrapper(boost::asio::io_context     &context,
-                      boost::asio::ip::tcp::socket socket)
-           : Session(context, std::move(socket), 0, &createMockHasher) {
-        start();
-    }
+    // TYPES
+    using HasherFactoryFunc = std::function<std::shared_ptr<IHasher>()>;
 
-    void handleSession() {
-        handle(true);
-    }
+  public:
+    // Create 'SessionWrapper' object with the specified 'context', 'socket' and
+    // 'hasherFactory'. The underlying 'Session' id to be set by 0.
+    SessionWrapper(boost::asio::io_context &    context,
+                   boost::asio::ip::tcp::socket socket,
+                   HasherFactoryFunc            hasherFactory)
+        : Session(context, std::move(socket), 0, hasherFactory) {}
 
+    // Call 'Session::handle'
+    void handleSession() { handle(true); }
 };
 
 // Create, start and stop session successfully.
 TEST(SessionTests, CreateSession) {
-std::cout << "Qowo" ;
     {
-    boost::asio::io_context      context;
-    boost::asio::ip::tcp::socket socket(context);
+        boost::asio::io_context      context;
+        boost::asio::ip::tcp::socket socket(context);
         testing::internal::CaptureStdout();
-        SessionWrapper sessionWrapped(context, std::move(socket));
+
+        auto hasher    = std::make_shared<MockHasher>();
+        auto hasherFun = std::bind(&createMockHasher, hasher);
+
+        auto sessionWrapped = std::make_shared<SessionWrapper>(
+            context, std::move(socket), hasherFun);
+        sessionWrapped->start();
+
         EXPECT_EQ(testing::internal::GetCapturedStdout(),
-              "Session with session id 0 started.\n");
+                  "Session with session id 0 started.\n");
         testing::internal::CaptureStdout();
     }
     EXPECT_EQ(testing::internal::GetCapturedStdout(),
@@ -54,16 +65,22 @@ std::cout << "Qowo" ;
     testing::internal::CaptureStderr();
     EXPECT_EQ(testing::internal::GetCapturedStderr(), "");
 }
-/*
+
+// Test that hash is to be computed when 'Session' handles input data
 TEST(SessionTests, ComputeHash) {
     boost::asio::io_context      context;
     boost::asio::ip::tcp::socket socket(context);
 
-    SessionWrapper sessionWrapped(context, std::move(socket));
-    sessionWrapped.handleSession();
+    auto hasher    = std::make_shared<MockHasher>();
+    auto hasherFun = std::bind(&createMockHasher, hasher);
+
+    auto sessionWrapped =
+        std::make_shared<SessionWrapper>(context, std::move(socket), hasherFun);
+
+    sessionWrapped->start();
+
     EXPECT_CALL(*hasher, compute);
-    
-    //sessionWrapped.session->
-    
+    EXPECT_CALL(*hasher, getResult);
+
+    sessionWrapped->handleSession();
 }
-*/

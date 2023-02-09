@@ -6,18 +6,6 @@
 #include <tcpserver.h>
 #include <ihasher.h>
 
-class MockHasher : public IHasher {
-  public:
-    MOCK_METHOD(void, compute, (const std::string &in, bool isLastChunk),
-                (override));
-    MOCK_METHOD(std::string, getResult, (), (override));
-    int getChunkSize() const override { return 32; }
-};
-
-std::shared_ptr<IHasher> createHasher() {
-    return std::make_shared<MockHasher>();
-}
-
 class TestClient {
     // This class implements a simple test client which runs on a localhost.
 
@@ -188,12 +176,12 @@ TEST(TcpServerTests, UnhappyPathCreateConnection) {
     // Sleep to avoid a race
     sleep(1);
 
-    server.stop();
-    sessions.clear();
-
     // Check the runtime error
     EXPECT_EQ(
         testing::internal::GetCapturedStderr(),
         "Failed to create session with a given session factory method, error: "
         "Error creating session");
+
+    server.stop();
+    sessions.clear();
 }

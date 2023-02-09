@@ -28,9 +28,16 @@ Hasher::getResult() {
     for (const auto &byte : output) {
         shastr << std::setw(2) << (int) byte;
     }
+
     return shastr.str();
 }
 
-std::shared_ptr<IHasher> createHasher(){
+int
+Hasher::getChunkSize() const {
+    return SHA256_DIGEST_LENGTH;
+}
+
+std::shared_ptr<IHasher>
+createHasher() {
     return std::make_shared<Hasher>();
 }

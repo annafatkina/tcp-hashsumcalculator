@@ -7,12 +7,7 @@ std::string
 Session::readBuffer() {
     std::istream iss(&rBuffer_);
     std::string  s;
-    try {
-        std::getline(iss, s);
-    } catch (const std::exception &e) {
-        std::cerr << "Warning! Exception while reading buffer: " << e.what();
-        return "";
-    }
+    std::getline(iss, s);
     return s;
 }
 
@@ -115,13 +110,12 @@ Session::start() {
 std::shared_ptr<ISession>
 createSession(boost::asio::io_context &    io_context,
               boost::asio::ip::tcp::socket socket, int sessionId) {
-                std::cout << "createSession!\n";
     try {
 
-    return std::make_shared<Session>(io_context, std::move(socket), sessionId,
-                                     createHasher);
-    } catch (const std::exception& e) {
-        std::cerr << "Error while create session: " << e.what(); 
+        return std::make_shared<Session>(io_context, std::move(socket),
+                                         sessionId, createHasher);
+    } catch (const std::exception &e) {
+        std::cerr << "Error while create session: " << e.what();
     }
     return nullptr;
 }

@@ -17,17 +17,18 @@ class Hasher : public IHasher {
     bool          inited;
 
   public:
-
     // Create 'Hasher' object.
     Hasher();
 
-    // Compute or update a hash for the specified 'in' string. If 'isLastChunk' is true, finalize hash algo
+    // Compute or update a hash for the specified 'in' string. If 'isLastChunk'
+    // is true, finalize hash algo
     void compute(const std::string &in, bool isLastChunk = true);
 
-    // Get a hex representation of the result of hash compute.
+    // Return a hex representation of the result of hash compute.
     std::string getResult() override;
 
-    int getChunkSize() const override { return SHA256_DIGEST_LENGTH; }
+    // Return maximum chunk size.
+    int getChunkSize() const override;
 };
 
 #endif   // HASHER_H

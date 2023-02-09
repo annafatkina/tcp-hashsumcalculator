@@ -11,9 +11,10 @@ class IHasher {
     // Return a hash for the specified 'str'.
     virtual void compute(const std::string &in, bool isLastChunk) = 0;
 
-    // Get the result of hash compute as a string.
+    // Return the result of hash compute as a string.
     virtual std::string getResult() = 0;
 
+    // Return maximum chunk size.
     virtual int getChunkSize() const = 0;
 
     // Destroy this object.
