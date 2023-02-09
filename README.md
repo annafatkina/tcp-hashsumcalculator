@@ -3,8 +3,7 @@
 TCP server for hashsum calculation. Clients connect to this server and send 
 strings devided by '\n' symbol. For each string hashsum is calculated, and its 
 hex representation to be received as a response. Hashsum is calculated with 
-'std::hash' which guarantees that the collision probability is 
-'1/max(size\_t)'.
+`sha256` algorithm from `openssl` by chunks.
 
 When client connects to server, the new session is opened for this client. 
 Client can send messagies as long as his buffer size allows it, without 
@@ -49,7 +48,7 @@ To run tests, build the project and the run the following from the build
 directory:
 
 ```
-make test
+ctest --verbose
 ```
 or
 
