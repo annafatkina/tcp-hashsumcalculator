@@ -68,7 +68,6 @@ TcpServer::stop() {
     if (acceptor_.is_open()) {
         acceptor_.close();
     }
-    
     if (!context_.stopped()) {
         context_.stop();
         std::cout << "Tcp Server stopped." << std::endl;

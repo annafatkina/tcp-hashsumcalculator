@@ -100,14 +100,15 @@ TEST(TcpServerTests, CreateServer) {
     testing::internal::CaptureStdout();
 
     // Run tcp server with mock sessions
-    TcpServer server(port, &createMockSession);
-    server.run();
-    server.stop();
+    auto server = std::make_unique<TcpServer>(port, &createMockSession);
+    server->run();
+    server->stop();
 
     std::string threadsNum =
         std::to_string(std::thread::hardware_concurrency());
 
-    EXPECT_EQ(testing::internal::GetCapturedStdout(),
+    auto stdout = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(stdout,
               "Starting " + threadsNum + " threads...\nTcp Server stopped.\n");
 }
 
@@ -118,40 +119,43 @@ TEST(TcpServerTests, RunServerSingleConnection) {
     std::string mockString = "dummy";
 
     testing::internal::CaptureStderr();
+    {
+        // Run tcp server with mock sessions
+        auto server = std::make_unique<TcpServer>(port, &createMockSession);
+        server->run();
 
-    // Run tcp server with mock sessions
-    TcpServer server(port, &createMockSession);
-    server.run();
-    // No active session
-    EXPECT_EQ(getSessionCounter(), 0);
+        // No active session
+        int noActiveSession = getSessionCounter();
+        EXPECT_EQ(noActiveSession, 0);
 
-    // Connect test client
-    TestClient client(port);
-    client.run();
+        // Connect test client
+        TestClient client(port);
+        client.run();
 
-    // Sleep to avoid a race
-    sleep(1);
+        // Sleep to avoid a race
+        sleep(1);
 
-    // One active session now
-    EXPECT_EQ(getSessionCounter(), 1);
+        // One active session now
+        int oneActiveSession = getSessionCounter();
+        EXPECT_EQ(oneActiveSession, 1);
 
-    auto firstSession = sessions[0];
-    firstSession->setMockString(mockString);
+        auto firstSession = sessions[0];
+        firstSession->setMockString(mockString);
 
-    // send dummy string
-    client.send(mockString);
+        // send dummy string
+        client.send(mockString);
 
-    ON_CALL(*firstSession, readBuffer())
-        .WillByDefault(::testing::Return(mockString));
+        ON_CALL(*firstSession, readBuffer())
+            .WillByDefault(::testing::Return(mockString));
 
-    server.stop();
+        // Shared ptrs issue
+        testing::Mock::AllowLeak(firstSession.get());
+    }
+
     sessions.clear();
 
     // Check that there was no runtime error
     EXPECT_EQ(testing::internal::GetCapturedStderr(), "");
-
-    // Shared ptrs issue
-    testing::Mock::AllowLeak(firstSession.get());
 }
 
 // Run the server with a session creation function throwing an error
@@ -166,7 +170,8 @@ TEST(TcpServerTests, UnhappyPathCreateConnection) {
     server->run();
 
     // No active session
-    EXPECT_EQ(getSessionCounter(), 0);
+    auto noActiveSession = getSessionCounter();
+    EXPECT_EQ(noActiveSession, 0);
 
     // Connect test client
     TestClient client(port);
@@ -176,8 +181,9 @@ TEST(TcpServerTests, UnhappyPathCreateConnection) {
     sleep(1);
 
     // Check the runtime error
+    auto stderr = testing::internal::GetCapturedStderr();
     EXPECT_EQ(
-        testing::internal::GetCapturedStderr(),
+        stderr,
         "Failed to create session with a given session factory method, error: "
         "Error creating session");
 
