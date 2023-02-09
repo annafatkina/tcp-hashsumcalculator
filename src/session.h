@@ -17,12 +17,11 @@ class Session : public ISession {
     // DATA
     std::shared_ptr<IHasher> hasher_;
     Context::strand          rwStrand_;
-    Tcp::socket socket_;
+    Tcp::socket              socket_;
     boost::asio::streambuf   rBuffer_;
     boost::asio::streambuf   wBuffer_;
 
-    // PRIVATE METHODS
-protected:
+  protected:
     // Return data read from buffer.
     std::string readBuffer() override;
 

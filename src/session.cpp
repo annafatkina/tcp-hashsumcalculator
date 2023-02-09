@@ -28,7 +28,7 @@ Session::do_read() {
         }
         if (ec == boost::asio::error::eof) {
             // do nothing, session will be closed.
-            return; 
+            return;
         }
 
         if (ec == boost::asio::error::not_found) {
@@ -115,7 +115,6 @@ std::shared_ptr<ISession>
 createSession(boost::asio::io_context &    io_context,
               boost::asio::ip::tcp::socket socket, int sessionId) {
     try {
-
         return std::make_shared<Session>(io_context, std::move(socket),
                                          sessionId, createHasher);
     } catch (const std::exception &e) {

@@ -6,8 +6,8 @@
 
 class IHasher {
     // This class provides an interface for a mechanism to compute a hash.
-  public:
 
+  public:
     // Return a hash for the specified 'str'.
     virtual void compute(const std::string &in, bool isLastChunk) = 0;
 

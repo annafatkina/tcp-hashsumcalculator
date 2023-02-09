@@ -1,5 +1,7 @@
 #include "hasher.h"
 #include <cstring>
+#include <iomanip>
+#include <iostream>
 #include <openssl/sha.h>
 
 Hasher::Hasher()
