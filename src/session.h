@@ -1,7 +1,7 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#include "hasher.h"
+#include "ihasher.h"
 #include "isession.h"
 #include <boost/asio.hpp>
 #include <memory>
@@ -10,18 +10,19 @@ class Session : public ISession {
     // This class represents a single client session.
 
     // TYPES
-    using Tcp     = boost::asio::ip::tcp;
-    using Context = boost::asio::io_context;
+    using Tcp               = boost::asio::ip::tcp;
+    using Context           = boost::asio::io_context;
+    using HasherFactoryFunc = std::function<std::shared_ptr<IHasher>()>;
 
     // DATA
-    Hasher                 hasher;
-    Context::strand        rwStrand_;
-    Tcp::socket            socket_;
-    boost::asio::streambuf rBuffer_;
-    boost::asio::streambuf wBuffer_;
+    std::shared_ptr<IHasher> hasher_;
+    Context::strand          rwStrand_;
+    Tcp::socket socket_;
+    boost::asio::streambuf   rBuffer_;
+    boost::asio::streambuf   wBuffer_;
 
     // PRIVATE METHODS
-
+protected:
     // Return data read from buffer.
     std::string readBuffer() override;
 
@@ -41,10 +42,11 @@ class Session : public ISession {
   public:
     // Create 'Session' object with the specified 'io_context', 'socket' and
     // 'sessionId'.
-    Session(Context &io_context, Tcp::socket socket, int sessionId);
+    Session(Context &io_context, Tcp::socket socket, int sessionId,
+            HasherFactoryFunc hasherFactoryFunc = createHasher);
 
     // Destroy this object.
-    ~Session();
+    virtual ~Session();
 
     // Start receiving data.
     void start() override;

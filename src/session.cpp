@@ -1,14 +1,18 @@
 #include "session.h"
-#include "hasher.h"
+#include "ihasher.h"
 #include <boost/bind.hpp>
 #include <iostream>
-#include <openssl/sha.h>
 
 std::string
 Session::readBuffer() {
     std::istream iss(&rBuffer_);
     std::string  s;
-    std::getline(iss, s);
+    try {
+        std::getline(iss, s);
+    } catch (const std::exception &e) {
+        std::cerr << "Warning! Exception while reading buffer: " << e.what();
+        return "";
+    }
     return s;
 }
 
@@ -21,7 +25,6 @@ Session::writeToBuffer(const std::string &str) {
 
 void
 Session::do_read() {
-    std::cout << "session id = " << sessionId_ << ", thread = " << std::this_thread::get_id() << std::endl;
     auto self(shared_from_this());
     auto callback = [this, self](boost::system::error_code ec, int size) {
         if (!ec) {
@@ -68,35 +71,33 @@ Session::do_write() {
 
 void
 Session::handle(bool lastChunk) {
-    try {
-    } catch (const std::exception &e) {
-        std::cerr << "Error while calling handling received data: " << e.what();
-    }
-
     std::string s = readBuffer();
     if (s.size() == 0) {
-        throw std::runtime_error("No data received and no line break reched.");
-        // ?????
+        std::cerr << "Warning: No data received and no line break reched."
+                  << std::endl;
     }
 
-    std::cout << "read: " << s << std::endl;
-    // Note: Hash computation is noexept
+    try {
+        hasher_->compute(s, lastChunk);
+    } catch (const std::exception &e) {
+        std::cerr << "Error while hashing: " << e.what();
+    }
 
-    hasher.compute(s, lastChunk);
     if (lastChunk) {
-        writeToBuffer(hasher.getResult());
+        writeToBuffer(hasher_->getResult());
     } else {
         do_read();
     }
-
 }
 
 // public
-Session::Session(Context &io_context, Tcp::socket socket, int sessionId)
+Session::Session(Context &io_context, Tcp::socket socket, int sessionId,
+                 HasherFactoryFunc hasherFactoryFunc)
     : ISession(sessionId)
+    , hasher_(hasherFactoryFunc())
     , rwStrand_(io_context)
     , socket_(std::move(socket))
-    , rBuffer_(SHA256_DIGEST_LENGTH)
+    , rBuffer_(hasher_->getChunkSize())
     , wBuffer_() {}
 
 Session::~Session() {
@@ -114,5 +115,13 @@ Session::start() {
 std::shared_ptr<ISession>
 createSession(boost::asio::io_context &    io_context,
               boost::asio::ip::tcp::socket socket, int sessionId) {
-    return std::make_shared<Session>(io_context, std::move(socket), sessionId);
+                std::cout << "createSession!\n";
+    try {
+
+    return std::make_shared<Session>(io_context, std::move(socket), sessionId,
+                                     createHasher);
+    } catch (const std::exception& e) {
+        std::cerr << "Error while create session: " << e.what(); 
+    }
+    return nullptr;
 }

@@ -1,8 +1,22 @@
+
 #include <boost/asio.hpp>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <isession.h>
 #include <tcpserver.h>
+#include <ihasher.h>
+
+class MockHasher : public IHasher {
+  public:
+    MOCK_METHOD(void, compute, (const std::string &in, bool isLastChunk),
+                (override));
+    MOCK_METHOD(std::string, getResult, (), (override));
+    int getChunkSize() const override { return 32; }
+};
+
+std::shared_ptr<IHasher> createHasher() {
+    return std::make_shared<MockHasher>();
+}
 
 class TestClient {
     // This class implements a simple test client which runs on a localhost.
@@ -63,7 +77,7 @@ class MockSession : public ISession {
     MOCK_METHOD(void, writeToBuffer, (const std::string &str), (override));
     MOCK_METHOD(void, do_read, (), (override));
     MOCK_METHOD(void, do_write, (), (override));
-    MOCK_METHOD(void, handle, (), (override));
+    MOCK_METHOD(void, handle, (bool lastChunk), (override));
     MOCK_METHOD(void, start, (), (override));
 
     MockSession(boost::asio::io_context &    io_context,
@@ -104,7 +118,7 @@ TEST(TcpServerTests, CreateServer) {
     server.stop();
 
     std::string threadsNum =
-        std::to_string(std::thread::hardware_concurrency() - 1);
+        std::to_string(std::thread::hardware_concurrency());
 
     EXPECT_EQ(testing::internal::GetCapturedStdout(),
               "Starting " + threadsNum + " threads...\nTcp Server stopped.\n");

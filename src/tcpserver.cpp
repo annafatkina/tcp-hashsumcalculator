@@ -6,7 +6,6 @@
 
 void
 TcpServer::do_accept() {
-    std::cout << "accept thread " << std::this_thread::get_id() << std::endl;
     acceptor_.async_accept([this](boost::system::error_code ec,
                                   Tcp::socket               socket) {
         if (!ec) {

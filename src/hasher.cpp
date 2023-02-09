@@ -6,7 +6,7 @@ Hasher::Hasher()
     : inited(false) {}
 
 void
-Hasher::compute(const std::string &in, bool isLastChunk) noexcept {
+Hasher::compute(const std::string &in, bool isLastChunk) {
     if (!inited) {
         SHA256_Init(&sha256);
         inited = true;
@@ -29,4 +29,8 @@ Hasher::getResult() {
         shastr << std::setw(2) << (int) byte;
     }
     return shastr.str();
+}
+
+std::shared_ptr<IHasher> createHasher(){
+    return std::make_shared<Hasher>();
 }
