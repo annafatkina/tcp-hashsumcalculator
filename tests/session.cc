@@ -17,26 +17,16 @@ class MockHasher : public IHasher {
     int getChunkSize() const override { return 32; }
 };
 
-// Return the specified mock 'hasher' as a pointer to its interface class
-// 'IHasher'.
-std::shared_ptr<IHasher>
-createMockHasher(std::shared_ptr<MockHasher> hasher) {
-    return hasher;
-}
-
 class SessionWrapper : public Session {
     // This class is a thin wrapper for 'Session' object to be tested.
-
-    // TYPES
-    using HasherFactoryFunc = std::function<std::shared_ptr<IHasher>()>;
 
   public:
     // Create 'SessionWrapper' object with the specified 'context', 'socket' and
     // 'hasherFactory'. The underlying 'Session' id to be set by 0.
     SessionWrapper(boost::asio::io_context &    context,
                    boost::asio::ip::tcp::socket socket,
-                   HasherFactoryFunc            hasherFactory)
-        : Session(context, std::move(socket), 0, hasherFactory) {}
+                   std::shared_ptr<IHasher>     hasher)
+        : Session(context, std::move(socket), 0, hasher) {}
 
     // Call 'Session::handle'
     void handleSession() { handle(true); }
@@ -49,11 +39,10 @@ TEST(SessionTests, CreateSession) {
         boost::asio::ip::tcp::socket socket(context);
         testing::internal::CaptureStdout();
 
-        auto hasher    = std::make_shared<MockHasher>();
-        auto hasherFun = std::bind(&createMockHasher, hasher);
+        auto hasher = std::make_shared<MockHasher>();
 
         auto sessionWrapped = std::make_shared<SessionWrapper>(
-            context, std::move(socket), hasherFun);
+            context, std::move(socket), hasher);
         sessionWrapped->start();
 
         EXPECT_EQ(testing::internal::GetCapturedStdout(),
@@ -71,11 +60,10 @@ TEST(SessionTests, ComputeHash) {
     boost::asio::io_context      context;
     boost::asio::ip::tcp::socket socket(context);
 
-    auto hasher    = std::make_shared<MockHasher>();
-    auto hasherFun = std::bind(&createMockHasher, hasher);
+    auto hasher = std::make_shared<MockHasher>();
 
     auto sessionWrapped =
-        std::make_shared<SessionWrapper>(context, std::move(socket), hasherFun);
+        std::make_shared<SessionWrapper>(context, std::move(socket), hasher);
 
     sessionWrapped->start();
 

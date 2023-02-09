@@ -8,6 +8,16 @@ class IHasher {
     // This class provides an interface for a mechanism to compute a hash.
 
   public:
+    // NOT IMPLEMENTED
+    IHasher(const IHasher &) = delete;
+    IHasher(IHasher &&)      = delete;
+
+    // Create 'IHasher' object.
+    IHasher() {}
+
+    // Destroy this object.
+    virtual ~IHasher() = default;
+
     // Return a hash for the specified 'str'.
     virtual void compute(const std::string &in, bool isLastChunk) = 0;
 
@@ -16,9 +26,6 @@ class IHasher {
 
     // Return maximum chunk size.
     virtual int getChunkSize() const = 0;
-
-    // Destroy this object.
-    virtual ~IHasher() = default;
 };
 
 // Return a shared_ptr to a sha256 hasher.

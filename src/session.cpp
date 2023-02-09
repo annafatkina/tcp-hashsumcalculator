@@ -91,9 +91,9 @@ Session::handle(bool lastChunk) {
 
 // public
 Session::Session(Context &io_context, Tcp::socket socket, int sessionId,
-                 HasherFactoryFunc hasherFactoryFunc)
+                 std::shared_ptr<IHasher> hasher)
     : ISession(sessionId)
-    , hasher_(hasherFactoryFunc())
+    , hasher_(hasher)
     , rwStrand_(io_context)
     , socket_(std::move(socket))
     , rBuffer_(hasher_->getChunkSize())
@@ -115,8 +115,9 @@ std::shared_ptr<ISession>
 createSession(boost::asio::io_context &    io_context,
               boost::asio::ip::tcp::socket socket, int sessionId) {
     try {
+        auto hasher = createHasher();
         return std::make_shared<Session>(io_context, std::move(socket),
-                                         sessionId, createHasher);
+                                         sessionId, hasher);
     } catch (const std::exception &e) {
         std::cerr << "Error while create session: " << e.what();
     }

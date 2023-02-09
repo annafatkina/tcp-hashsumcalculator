@@ -1,8 +1,6 @@
 #ifndef HASHER_H
 #define HASHER_H
 
-#include <iomanip>
-#include <iostream>
 #include <openssl/sha.h>
 #include <string>
 

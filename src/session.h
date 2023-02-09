@@ -12,7 +12,6 @@ class Session : public ISession {
     // TYPES
     using Tcp               = boost::asio::ip::tcp;
     using Context           = boost::asio::io_context;
-    using HasherFactoryFunc = std::function<std::shared_ptr<IHasher>()>;
 
     // DATA
     std::shared_ptr<IHasher> hasher_;
@@ -42,7 +41,7 @@ class Session : public ISession {
     // Create 'Session' object with the specified 'io_context', 'socket' and
     // 'sessionId'.
     Session(Context &io_context, Tcp::socket socket, int sessionId,
-            HasherFactoryFunc hasherFactoryFunc = createHasher);
+            std::shared_ptr<IHasher> hasher);
 
     // Destroy this object.
     virtual ~Session();

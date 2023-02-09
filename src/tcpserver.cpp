@@ -1,5 +1,4 @@
 #include "tcpserver.h"
-
 #include <boost/bind.hpp>
 #include <functional>
 #include <iostream>
