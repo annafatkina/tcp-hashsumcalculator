@@ -1,9 +1,9 @@
 #include <boost/asio.hpp>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <ihasher.h>
 #include <isession.h>
 #include <tcpserver.h>
-#include <ihasher.h>
 
 class TestClient {
     // This class implements a simple test client which runs on a localhost.
@@ -45,14 +45,14 @@ class TestClient {
 
 class MockSession;
 
-std::mutex sessionsMtx;
+std::mutex                                sessionsMtx;
 std::vector<std::shared_ptr<MockSession>> sessions;
 
-int getSessionCounter() {
+int
+getSessionCounter() {
     std::lock_guard<std::mutex> lg(sessionsMtx);
     return sessions.size();
 }
-
 
 class MockSession : public ISession {
     // This is a mock session class for 'TcpServer' testing.
@@ -69,9 +69,9 @@ class MockSession : public ISession {
 
     MockSession(boost::asio::io_context &    io_context,
                 boost::asio::ip::tcp::socket socket, int sessionId)
-        : ISession(sessionId) { }
+        : ISession(sessionId) {}
 
-    ~MockSession() { }
+    ~MockSession() {}
 
     void setMockString(const std::string &str) { mockString = str; }
 };
@@ -81,7 +81,7 @@ std::shared_ptr<ISession>
 createMockSession(boost::asio::io_context &    io_context,
                   boost::asio::ip::tcp::socket socket, int sessionId) {
     std::lock_guard<std::mutex> lg(sessionsMtx);
-    auto session =
+    auto                        session =
         std::make_shared<MockSession>(io_context, std::move(socket), sessionId);
     sessions.emplace_back(session);
     return session;
