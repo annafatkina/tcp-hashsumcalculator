@@ -1,5 +1,5 @@
 #include "session.h"
-#include "hasher.h"
+#include "ihasher.h"
 #include <boost/bind.hpp>
 #include <iostream>
 
@@ -23,17 +23,22 @@ Session::do_read() {
     auto self(shared_from_this());
     auto callback = [this, self](boost::system::error_code ec, int size) {
         if (!ec) {
-            try {
-                handle();
-            } catch (const std::exception &e) {
-                std::cerr << "Error while calling 'Session::handle()': "
-                          << e.what();
-            }
-        } else {
-            std::cerr << "Error while reading data from client:\n\t"
-                      << ec.message() << "\nfor session with session id "
-                      << sessionId_ << ". Closing this session." << std::endl;
+            handle(true /*is the last chunk*/);
+            return;
         }
+        if (ec == boost::asio::error::eof) {
+            // do nothing, session will be closed.
+            return;
+        }
+
+        if (ec == boost::asio::error::not_found) {
+            handle(false /*is not a last chunk */);
+            return;
+        }
+
+        std::cerr << "Error while reading data from client:\n\t" << ec.message()
+                  << "\nfor session with session id " << sessionId_
+                  << ". Closing this session." << std::endl;
     };
 
     boost::asio::async_read_until(
@@ -53,7 +58,7 @@ Session::do_write() {
                           << e.what();
             }
         } else {
-            std::cerr << "Error while writing data from client:\n\t"
+            std::cerr << "Error while writing data to client:\n\t"
                       << ec.message() << "\nfor session with session id "
                       << sessionId_ << ". Closing this session." << std::endl;
         }
@@ -64,20 +69,34 @@ Session::do_write() {
 }
 
 void
-Session::handle() {
+Session::handle(bool lastChunk) {
     std::string s = readBuffer();
+    if (s.size() == 0) {
+        std::cerr << "Warning: No data received and no line break reched."
+                  << std::endl;
+    }
 
-    // Note: Hash computation is noexept
-    std::string hash = Hasher::compute(s);
-    writeToBuffer(hash);
+    try {
+        hasher_->compute(s, lastChunk);
+    } catch (const std::exception &e) {
+        std::cerr << "Error while hashing: " << e.what();
+    }
+
+    if (lastChunk) {
+        writeToBuffer(hasher_->getResult());
+    } else {
+        do_read();
+    }
 }
 
 // public
-Session::Session(Context &io_context, Tcp::socket socket, int sessionId)
+Session::Session(Context &io_context, Tcp::socket socket, int sessionId,
+                 std::shared_ptr<IHasher> hasher)
     : ISession(sessionId)
+    , hasher_(hasher)
     , rwStrand_(io_context)
     , socket_(std::move(socket))
-    , rBuffer_()
+    , rBuffer_(hasher_->getChunkSize())
     , wBuffer_() {}
 
 Session::~Session() {
@@ -95,5 +114,12 @@ Session::start() {
 std::shared_ptr<ISession>
 createSession(boost::asio::io_context &    io_context,
               boost::asio::ip::tcp::socket socket, int sessionId) {
-    return std::make_shared<Session>(io_context, std::move(socket), sessionId);
+    try {
+        auto hasher = createHasher();
+        return std::make_shared<Session>(io_context, std::move(socket),
+                                         sessionId, hasher);
+    } catch (const std::exception &e) {
+        std::cerr << "Error while create session: " << e.what();
+    }
+    return nullptr;
 }

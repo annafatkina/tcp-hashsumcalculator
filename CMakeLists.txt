@@ -5,6 +5,9 @@ project( tcp_server LANGUAGES CXX )
 set( CMAKE_CXX_STANDARD 17 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 
+set(OPENSSL_USE_STATIC_LIBS TRUE)
+find_package(OpenSSL REQUIRED)
+
 add_subdirectory(src)
 add_subdirectory(tests)
 
@@ -17,4 +20,3 @@ add_test(NAME tcpserver COMMAND ./tests/tcpserver)
 set_tests_properties(hasher PROPERTIES TIMEOUT 2)
 set_tests_properties(session PROPERTIES TIMEOUT 2)
 set_tests_properties(tcpserver PROPERTIES TIMEOUT 3)
-

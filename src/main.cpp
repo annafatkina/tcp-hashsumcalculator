@@ -9,10 +9,10 @@ main(int argc, char *argv[]) {
             return 1;
         }
 
-        TcpServer server(std::atoi(argv[1]));
+        auto server = std::make_unique<TcpServer>(std::atoi(argv[1]));
 
-        server.run();
-        server.waitForStop();
+        server->run();
+        server->waitForStop();
     } catch (std::exception &e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }

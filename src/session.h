@@ -1,7 +1,7 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#include "hasher.h"
+#include "ihasher.h"
 #include "isession.h"
 #include <boost/asio.hpp>
 #include <memory>
@@ -14,13 +14,13 @@ class Session : public ISession {
     using Context = boost::asio::io_context;
 
     // DATA
-    Context::strand        rwStrand_;
-    Tcp::socket            socket_;
-    boost::asio::streambuf rBuffer_;
-    boost::asio::streambuf wBuffer_;
+    std::shared_ptr<IHasher> hasher_;
+    Context::strand          rwStrand_;
+    Tcp::socket              socket_;
+    boost::asio::streambuf   rBuffer_;
+    boost::asio::streambuf   wBuffer_;
 
-    // PRIVATE METHODS
-
+  protected:
     // Return data read from buffer.
     std::string readBuffer() override;
 
@@ -35,15 +35,16 @@ class Session : public ISession {
     void do_write() override;
 
     // Process the received data.
-    void handle() override;
+    void handle(bool lastChunk) override;
 
   public:
     // Create 'Session' object with the specified 'io_context', 'socket' and
     // 'sessionId'.
-    Session(Context &io_context, Tcp::socket socket, int sessionId);
+    Session(Context &io_context, Tcp::socket socket, int sessionId,
+            std::shared_ptr<IHasher> hasher);
 
     // Destroy this object.
-    ~Session();
+    virtual ~Session();
 
     // Start receiving data.
     void start() override;

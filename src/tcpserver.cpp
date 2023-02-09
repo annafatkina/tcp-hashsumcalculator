@@ -1,5 +1,4 @@
 #include "tcpserver.h"
-
 #include <boost/bind.hpp>
 #include <functional>
 #include <iostream>
@@ -23,7 +22,7 @@ TcpServer::do_accept() {
                       << std::endl;
         }
 
-        do_accept();
+       do_accept();
     });
 }
 
@@ -47,7 +46,7 @@ TcpServer::TcpServer(short port, SessionFactoryFunc sessionFactoryFunc)
     , threads_()
     , sessionCounter_(0)
     , sessionFactory_(sessionFactoryFunc)
-    , num_threads_(std::thread::hardware_concurrency() - 1) {
+    , num_threads_(std::thread::hardware_concurrency()) {
 
     // Register to handle the signals that indicate when the server should exit.
     // It is safe to register for the same signal multiple times in a program,
@@ -70,6 +69,11 @@ TcpServer::stop() {
         context_.stop();
         std::cout << "Tcp Server stopped." << std::endl;
     }
+
+    if (acceptor_.is_open()) {
+        acceptor_.close();
+    }
+    
     waitForStop();
 }
 
