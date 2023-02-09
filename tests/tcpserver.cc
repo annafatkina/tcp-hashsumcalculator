@@ -162,8 +162,8 @@ TEST(TcpServerTests, UnhappyPathCreateConnection) {
     testing::internal::CaptureStderr();
 
     // Run tcp server with mock sessions
-    TcpServer server(port, &createErrorMockSession);
-    server.run();
+    auto server = std::make_unique<TcpServer>(port, &createErrorMockSession);
+    server->run();
 
     // No active session
     EXPECT_EQ(getSessionCounter(), 0);
@@ -181,6 +181,5 @@ TEST(TcpServerTests, UnhappyPathCreateConnection) {
         "Failed to create session with a given session factory method, error: "
         "Error creating session");
 
-    server.stop();
     sessions.clear();
 }
