@@ -26,6 +26,10 @@ Session::do_read() {
             handle(true /*is the last chunk*/);
             return;
         }
+        if (ec == boost::asio::error::eof) {
+            // do nothing, session will be closed.
+            return; 
+        }
 
         if (ec == boost::asio::error::not_found) {
             handle(false /*is not a last chunk */);
